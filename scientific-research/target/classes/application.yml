@@ -1,0 +1,43 @@
+server:
+  #配置启动端口号为8088
+  port: 8088
+
+spring:
+  datasource:
+    #mysql驱动包
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    #数据库名：research
+    #&serverTimezone=GMT  时区必须配置 否则mysql启动报错
+    url:  jdbc:mysql://localhost:3306/research?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2b8
+    username: root
+    password: root
+    #当前数据源操作类型
+    type: com.alibaba.druid.pool.DruidDataSource
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update # 一般使用update
+        # create: 每次运行程序时，都会重新创建表，故而数据会丢失
+        # create-drop: 每次运行程序时会先创建表结构，然后待程序结束时清空表
+        # upadte: 每次运行程序，没有表时会创建表，如果对象发生改变会更新表结构，原有数据不会清空，只会更新（推荐使用）
+      # validate: 运行程序会校验数据与数据库的字段类型是否相同，字段不同会报错
+      # none: 禁用DDL处理
+  thymeleaf:
+    #开发环境关闭缓存，以保证我们修改页面及时刷新看到效果
+    cache: false
+  devtools:
+    restart:
+      enabled: true
+        #添加那个目录的文件需要restart
+        #additional-paths: src/main/java
+        #排除那个目录的文件不需要restart
+      #exclude: static/**
+  servlet:
+    multipart:
+      # 设置单个文件大小
+      max-file-size: 10MB
+      # 设置单次请求文件的总大小
+      max-request-size: 10MB
+

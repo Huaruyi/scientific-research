@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>消息详情标题</title>
+    <th:block th:replace="common :: link"/>
+    <link rel="stylesheet" th:href="@{/layuiadmin/layui/css/layui.css}" media="all">
+    <link rel="stylesheet" th:href="@{/layuiadmin/style/admin.css}" media="all">
+</head>
+<body>
+
+<div class="layui-fluid" id="LAY-app-message-detail">
+    <div class="layui-card layuiAdmin-msg-detail">
+        <script type="text/html" template lay-url="/notice/detail/{{ layui.router().search.id }}">
+            <div class="layui-card-header">
+                <h1>{{ d.data.title }}</h1>
+                <p>
+                    <span>{{ layui.util.timeAgo(d.data.time) }}</span>
+                    <span>发送给
+                        {{# if(d.data.receiver == 0){ }}
+                            <span style="font-style: italic">所有人</span>
+                        {{# } }}
+                        {{# if(d.data.receiver != 0){ }}
+                            <span style="font-style: italic">我</span>
+                        {{# } }}
+                    </span>
+                </p>
+            </div>
+            <div class="layui-card-body layui-text">
+                <div class="layadmin-text">
+                    {{ d.data.content }}
+                </div>
+
+                <div style="padding-top: 30px;">
+                    <a href="javascript:;" layadmin-event="back" class="layui-btn layui-btn-primary layui-btn-sm">返回上级</a>
+                </div>
+            </div>
+        </script>
+    </div>
+</div>
+
+<script th:src="@{/layuiadmin/layui/layui.js}"></script>
+<th:block th:replace="common :: script"/>
+<script>
+    layui.config({
+        base: '/layuiadmin/' //静态资源所在路径
+    }).extend({
+        index: 'lib/index' //主入口模块
+    }).use(['index'], function () {
+        let router = layui.router();
+    });
+</script>
+</body>
+</html>

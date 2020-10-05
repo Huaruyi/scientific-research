@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Layui</title>
+    <th:block th:replace="common :: link"/>
+</head>
+<body>
+
+<div class="myformtop myformcenter">
+    <form class="layui-form layui-form-pane" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">工号</label>
+            <div class="layui-input-inline">
+                <input type="text" disabled="disabled" name="userId" th:value="${session.user.userId}" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">密码</label>
+            <div class="layui-input-inline">
+                <input type="password" name="userPassword" id="passtext" placeholder="请输入新密码" lay-verify="pass" autocomplete="off" class="layui-input">
+            </div>
+            <div class="layui-form-mid layui-word-aux">6-12位，建议英文、数字、下划线组合</div>
+        </div>
+
+        <div class="layui-form-item">
+            <button class="layui-btn" lay-submit="" lay-filter="demo2">确定</button>
+        </div>
+    </form>
+</div>
+
+
+
+
+
+
+
+
+<th:block th:replace="common :: script"/>
+<script>
+    layui.use(['form', 'layedit', 'laydate'], function(){
+        let form = layui.form
+            ,layer = layui.layer
+            ,layedit = layui.layedit
+            ,laydate = layui.laydate;
+
+
+
+        //自定义验证规则
+        form.verify({
+            pass: [
+                /^[\S]{6,12}$/
+                ,'密码必须6到12位，且不能出现空格'
+            ]
+        });
+        //监听提交
+        form.on('submit(demo2)', function(data){
+            //清空输入的密码
+            $("#passtext").val("");
+            $.ajax({
+                url:'/userSetPass',
+                type:'PUT',
+                data:data.field,
+                dataType:'json',
+                success:function (res) {
+                    if (res.result){
+                        layer.msg(res.message,{
+                            icon:1
+                            ,time: 1000
+                        },function () {
+                            //iframe整页刷新
+                            window.parent.location.href="controller"
+                        });
+
+                    } else{
+                        layer.msg(res.message,{icon:5},function () {});
+                    }
+
+                }
+            });
+            //阻止页面跳转
+            return false;
+        });
+
+    });
+</script>
+
+</body>
+</html>

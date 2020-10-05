@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <th:block th:replace="common :: link"/>
+</head>
+<body>
+<form class="layui-form myformtop" action="">
+    <div class="layui-form-item">
+        <!--隐藏域，提交当前用户的ID(工号）-->
+        <input type="hidden" name="User.userId" th:value="${session.user.userId}"/>
+        <div class="layui-inline">
+            <label class="layui-form-label">科研类型</label>
+            <div class="layui-input-inline layui-form">
+                <select name="researchType" lay-verify="required" lay-search="">
+                    <option value="">直接选择或搜索选择</option>
+                    <option value="论文" th:selected="${research!=null}?${research.researchType=='论文'}">论文</option>
+                    <option value="专利" th:selected="${research!=null}?${research.researchType=='专利'}">专利</option>
+                    <option value="课题" th:selected="${research!=null}?${research.researchType=='课题'}">课题</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-inline">
+            <!--隐藏域，提交文件上传的路径-->
+            <input type="hidden" id="fileurl" lay-verify="file" th:value="${research!=null}?${research.researchPath}" name="researchPath"/>
+            <div class="layui-upload">
+                <button type="button" class="layui-btn layui-btn-normal" id="select">选择文件</button>
+                <button type="button" class="layui-btn" id="file">开始上传</button>
+            </div>
+
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <th:block th:if="${research==null}">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </th:block>
+
+            <th:block th:if="${research!=null}">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">重新提交</button>
+            </th:block>
+        </div>
+    </div>
+</form>
+
+<th:block th:replace="common :: script"/>
+<script>
+    layui.use(['form','upload',"layer"], function(){
+        let $ = layui.jquery
+            ,upload = layui.upload
+            ,layer = layui.layer
+            ,form = layui.form;
+
+        //自定义校验规则
+        form.verify({
+            file : function (value) {
+                if (value.length < 1){
+                    return '请先上传文件'
+                }
+            }
+        });
+
+        //选完文件后不自动上传
+        upload.render({
+            elem: '#select'
+            ,url: '/upload' //改成您自己的上传接口
+            ,auto: false
+            ,accept: 'file' //普通文件
+            ,bindAction: '#file'
+            ,done: function(res){
+                if (res.result){
+                    layer.msg(res.message,{icon:1},function (){});
+                    //将后端传回来的文件目录（名）赋值给 fileurl
+                    $("#fileurl").val(res.data);
+                } else if (!res.result) {
+                    layer.msg(res.message,{icon:5},function (){});
+                }
+                console.log(res)
+            }
+        });
+
+        //监听提交
+        form.on('submit(demo1)', function(data){
+            /*layer.alert(JSON.stringify(data.field), {
+                title: '最终的提交信息'
+            });*/
+            $.ajax({
+                url:'/research',
+                type:'POST',
+                data:data.field,
+                dataType:'json',
+                success:function (res) {
+                    if (res.result){
+                        layer.msg(res.message,{
+                            icon:1
+                            ,time: 1000
+                        },function (){
+                            location.href = '/researchList4User'; //跳转到审核列表
+                        });
+                    } else{
+                        layer.msg(res.message,{icon:5},function (){});
+                    }
+
+                }
+            });
+            //阻止页面跳转
+            return false;
+        });
+    });
+</script>
+
+</body>
+</html>

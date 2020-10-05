@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Layui</title>
+    <th:block th:replace="common :: link"/>
+</head>
+<body>
+
+<div class="myformtop myformcenter">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">工号</label>
+                <div class="layui-input-inline">
+                    <input type="text" disabled="disabled" th:value="${session.user.userId}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">真实姓名</label>
+                <div class="layui-input-inline">
+                    <input type="text" disabled="disabled" th:value="${session.user.userRealName}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">性别</label>
+                <div class="layui-input-inline">
+                    <input type="radio" disabled="disabled" value="0" title="男" checked="" th:checked="${session.user.userGender==1}">
+                    <input type="radio" disabled="disabled" value="1" title="女" th:checked="${session.user.userGender==0}">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">出生日期</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="date" disabled="disabled" th:value="${session.user.userBirth}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">学历</label>
+                <div class="layui-input-inline">
+                    <input type="text" disabled="disabled" th:value="${session.user.userEducationBackground}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+             <div class="layui-inline">
+                <label class="layui-form-label">编制</label>
+                <div class="layui-input-inline">
+                    <input type="text" disabled="disabled" th:value="${session.user.userTitle}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">所属院系</label>
+                <div class="layui-input-inline">
+                    <input type="text" disabled="disabled" th:value="${session.user.school.schoolName}" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<th:block th:replace="common :: script"/>
+<script>
+    layui.use(['form', 'layedit', 'laydate'], function(){
+        let form = layui.form
+            ,layer = layui.layer
+            ,layedit = layui.layedit
+            ,laydate = layui.laydate;
+
+        //日期
+        laydate.render({
+            elem: '#date'
+        });
+        laydate.render({
+            elem: '#date1'
+        });
+
+    });
+</script>
+
+</body>
+</html>

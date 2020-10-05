@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <title>用户登录</title>
+    <link rel="shortcut icon" th:href="@{/images/favicon.ico}" type="image/x-icon">
+    <link rel="stylesheet" th:href="@{/layuiadmin/layui/css/layui.css}">
+    <link rel="stylesheet" th:href="@{layuiadmin/style/admin.css}">
+    <link rel="stylesheet" th:href="@{/layuiadmin/style/login.css}">
+</head>
+<body>
+
+  <div class="layadmin-user-login layadmin-user-display-show" id="LAY-user-login">
+
+    <div class="layadmin-user-login-main">
+      <div class="layadmin-user-login-box layadmin-user-login-header">
+        <h2>用户登录</h2>
+      </div>
+      <div class="layadmin-user-login-box layadmin-user-login-body layui-form" style="background-color: white;
+    opacity:0.95;">
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-username" for="LAY-user-login-username"></label>
+          <input type="text" name="userId" id="LAY-user-login-username" lay-verify="id" placeholder="工号" class="layui-input">
+        </div>
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-password" for="LAY-user-login-password"></label>
+          <input type="password" name="userPassword" id="LAY-user-login-password" lay-verify="pass" placeholder="密码" class="layui-input">
+        </div>
+          <p style="color: red;text-align: center" th:text="${msg}" th:if="${not #strings.isEmpty(msg)}"></p>
+        <div class="layui-form-item" style="margin-bottom: 20px;">
+          <input type="checkbox" name="remember" lay-skin="primary" title="记住密码">
+          <a href="forget.html" class="layadmin-user-jump-change layadmin-link" style="margin-top: 7px;">忘记密码？</a>
+        </div>
+        <div class="layui-form-item">
+          <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="LAY-user-login-submit">登录</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="layui-trans layadmin-user-login-footer">
+      <p>© 2020 <a href="#" target="_blank">广厦学院教师科研成果管理系统</a></p>
+    </div>
+    
+  </div>
+
+  <th:block th:replace="common :: script"/>
+
+  <script>
+  layui.config({
+    base: '/layuiadmin/' //静态资源所在路径
+  }).extend({
+      index: 'lib/index' //主入口模块
+  }).use(['index', 'user', 'upload'], function(){
+    let $ = layui.$
+    ,setter = layui.setter
+    ,admin = layui.admin
+    ,form = layui.form
+    ,router = layui.router()
+    ,search = router.search
+    ,upload = layui.upload
+    ,layer = layui.layer;
+
+    form.render();
+
+    //自定义校验规则
+    form.verify({
+        id : function (value) {
+            if (value.length !== 4){
+                return '工号需要4位'
+            }
+        },pass: [
+            /^[\S]{6,12}$/
+            ,'密码必须6到12位，且不能出现空格'
+        ]
+    });
+
+    //提交
+    form.on('submit(LAY-user-login-submit)', function(obj){
+        //alert(obj.field.vercode);
+        $.ajax({
+            url:'/login',
+            type:'POST',
+            data:obj.field,
+            dataType:'json',
+            success:function (res) {
+                if (res.result) {
+                    //登入成功的提示与跳转
+                    layer.msg('登录成功', {
+                        offset: '15px'
+                        ,icon: 1
+                        ,time: 1000
+                    }, function(){
+                        location.href = '/controller'; //后台主页
+                    });
+                }else{
+                    layer.msg(res.message,{icon:5},function (){});
+                }
+            }
+        });
+    });
+  });
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>消息中心</title>
+
+    <th:block th:replace="common :: link"/>
+</head>
+<body>
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-tab layui-tab-brief">
+            <ul class="layui-tab-title">
+                <li class="layui-this">全部消息</li>
+                <li>@我</li>
+                <li>@全体</li>
+            </ul>
+            <div class="layui-tab-content">
+                <input type="hidden" id="userHid" th:value="${session.user.userId}">
+                <div class="layui-tab-item layui-show">
+                    <table id="table" lay-filter="table"></table>
+                </div>
+                <div class="layui-tab-item">
+                    <table id="table1" lay-filter="table1"></table>
+                </div>
+                <div class="layui-tab-item">
+                    <table id="table2" lay-filter="table2"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/layuiadmin/layui/layui.js}"></script>
+<th:block th:replace="common :: script"/>
+<script>
+    layui.use(['element','form','upload','table','laydate'], function(){
+
+        let table = layui.table
+            ,form = layui.form
+            ,router = layui.router()
+            ,upload = layui.upload
+            ,layer = layui.layer
+            ,laytpl = layui.laytpl
+            ,element = layui.element;
+
+
+
+        //标题内容模板
+        let tplTitle = function(d){
+            return '<a href="/noticeDetail/#/id='+ d.id +'">'+ d.title;
+        };
+
+        let userHid = $("#userHid").val();
+        table.render({
+            elem: '#table'
+            ,url: '/notice'
+            ,skin: 'line'
+            ,where: {userId:userHid,userId1:0} //使用where传参
+            ,cols: [
+                [
+                    {field:'title', title:'标题', minWidth: 300, templet: tplTitle}
+                    ,{field:'time', title:'发布时间', width:120, templet: '<div>{{ layui.util.timeAgo(d.time) }}</div>'}
+                    ,{field:'receiver', title:'发送给', width:120, templet: function (res) {
+                        if (res.receiver === '0') {
+                            return '<span>所有人</span>';
+                        }else if (res.receiver !== '0'){
+                            return '<span>我</span>';
+                        }
+                    }}
+                ]
+            ]
+            ,page: true
+        });
+        table.render({
+            elem: '#table1'
+            ,url: '/notice'
+            ,skin: 'line'
+            ,where: {userId:userHid} //使用where传参
+            ,cols: [
+                [
+                    {field:'title', title:'标题', minWidth: 300, templet: tplTitle}
+                    ,{field:'time', title:'发布时间', width:120, templet: '<div>{{ layui.util.timeAgo(d.time) }}</div>'}
+                    ,{field:'receiver', title:'发送给', width:120, templet: function (res) {
+                        if (res.receiver === '0') {
+                            return '<span>所有人</span>';
+                        }else if (res.receiver !== '0'){
+                            return '<span>我</span>';
+                        }
+                    }}
+                ]
+            ]
+            ,page: true
+        });
+        table.render({
+            elem: '#table2'
+            ,url: '/notice'
+            ,skin: 'line'
+            ,where: {userId:0} //使用where传参
+            ,cols: [
+                [
+                    {field:'title', title:'标题', minWidth: 300, templet: tplTitle}
+                    ,{field:'time', title:'发布时间', width:120, templet: '<div>{{ layui.util.timeAgo(d.time) }}</div>'}
+                    ,{field:'receiver', title:'发送给', width:120, templet: function (res) {
+                        if (res.receiver === '0') {
+                            return '<span>所有人</span>';
+                        }else if (res.receiver !== '0'){
+                            return '<span>我</span>';
+                        }
+                    }}
+                ]
+            ]
+            ,page: true
+        });
+
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <th:block th:replace="common :: link"/>
+</head>
+<body>
+<form class="layui-form myformtop" action="">
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">标题</label>
+            <div class="layui-input-inline">
+                <input type="text" name="title" autocomplete="off"  placeholder="请输入标题" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">发送给</label>
+            <div class="layui-input-inline layui-form" lay-filter="receiver">
+                <select name="receiver" lay-verify="required" id="receiver" lay-search="">
+                    <option value="">直接选择或搜索选择</option>
+                    <option value="0">所有人</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <textarea class="layui-textarea" id="LAY_demo1" style="display: none"></textarea>
+        <input type="hidden" id="textContent" name="content">
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<th:block th:replace="common :: script"/>
+<script>
+    layui.use(['layedit','form','upload',"layer"], function(){
+        let $ = layui.jquery
+            ,upload = layui.upload
+            ,layer = layui.layer
+            ,layedit = layui.layedit
+            ,form = layui.form;
+
+        //构建一个默认的编辑器
+        //自定义工具栏
+        let index = layedit.build('LAY_demo1', {
+            tool: ['strong', 'italic', 'underline','del', '|', 'left', 'center', 'right']
+            ,height: 100
+        });
+
+        //从后台获取teacher
+        $(function () {
+            $.ajax({
+                url:'/teachers',
+                type:'GET',
+                dataType:'json',
+                success:function (res) {
+                    $.each(res.data,function (index, item) {
+                        $("#receiver").append(new Option(item.userId+" "+item.userRealName,item.userId))
+                    });
+                    //前者为select标签，后者为lay-filter 所指定的值
+                    form.render('select','receiver');
+                }
+            });
+        });
+
+        //监听提交
+        form.on('submit(demo1)', function(data){
+            data.field.content = layedit.getContent(index);
+            //提交前做一些初始化
+            layer.alert(JSON.stringify(data.field), {
+                title: '最终的提交信息'
+            });
+            $.ajax({
+                url:'/notice',
+                type:'POST',
+                data:data.field,
+                dataType:'json',
+                success:function (res) {
+                    if (res.result){
+                        layer.msg(res.message,{icon:1},function (){});
+                        setTimeout( function(){
+                        }, 1 * 1000 );
+                    } else{
+                        layer.msg(res.message,{icon:5},function (){});
+                    }
+
+                }
+            });
+            //阻止页面跳转
+            return false;
+        });
+
+    });
+</script>
+
+</body>
+</html>

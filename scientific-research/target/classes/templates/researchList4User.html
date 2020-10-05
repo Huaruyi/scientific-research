@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>layui调试</title>
+    <th:block th:replace="common :: link"/>
+</head>
+<body>
+<!--条件搜索-->
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>条件搜索</legend>
+</fieldset>
+<div class="demoTable">
+    类型：
+    <div class="layui-input-inline layui-form">
+        <select id="type">
+            <option value="" selected="">按类型搜索</option>
+            <option value="课题" >课题</option>
+            <option value="专利" >专利</option>
+            <option value="论文" >论文</option>
+        </select>
+    </div>
+    上传日期：
+    <div class="layui-inline">
+
+        <input class="layui-input" name="undefined1" id="uploadDate" placeholder="yyyy-MM-dd" autocomplete="off">
+    </div>
+    审核日期：
+    <div class="layui-inline">
+        <input class="layui-input" name="undefined1" id="auditDate" placeholder="yyyy-MM-dd" autocomplete="off">
+    </div>
+    审核状态：
+    <div class="layui-input-inline layui-form">
+        <select id="state" lay-search="">
+            <option value="" selected="">按审核状态搜索</option>
+            <option value="0" >待审核</option>
+            <option value="1" >审核通过</option>
+            <option value="2" >审核不通过</option>
+        </select>
+    </div>
+
+    <button class="layui-btn" data-type="reload">搜索</button>
+</div>
+
+<table class="layui-hide" id="table" lay-filter="table"></table>
+
+<input type="hidden" id="userHid" th:value="${session.user.userId}">
+<!--layui templet模板 用于下载文件-->
+<script type="text/html" id="filetmp">
+    <a href="http://localhost:8088/temp/{{d.researchPath}}" download>{{d.researchPath}}</a>
+    <!--备注: download属性只支持firefox， chrome，不支持IE-->
+</script>
+<script type="text/html" id="bar">
+    {{# if(d.researchState == 2){ }}
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="reupload">重新上传</a>
+    {{# } }}
+    <!--未审核可以删除-->
+    {{# if(d.researchState == 0){ }}
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{# } }}
+</script>
+
+
+<th:block th:replace="common :: script"/>
+
+<script>
+    layui.use(['form','upload','table','laydate'], function(){
+        let table = layui.table
+            ,form = layui.form
+            ,router = layui.router()
+            ,upload = layui.upload
+            ,layer = layui.layer
+            ,laydate = layui.laydate;
+
+        //取出当前用户工号
+        let userHid = $("#userHid").val();
+
+        //温馨提示：默认由前端自动合计当前行数据。从 layui 2.5.6 开始： 若接口直接返回了合计行数据，则优先读取接口合计行数据。
+        //详见：https://www.layui.com/doc/modules/table.html#totalRow
+        table.render({
+            elem: '#table'
+            ,url:'/researchs'
+            ,toolbar: '#toolbarDemo'
+            ,where:{userId:userHid} //使用where传参
+            ,title: '科研数据表'
+            ,cols: [
+                [
+                    {field:'researchType', title:'科研类型', width:120}
+                    ,{field:'researchPath', title:'附件(点击下载）', width:300, templet:"#filetmp"}
+                    ,{field:'researchCommitTime', title:'上传时间', sort:true ,width:120}
+                    ,{field:'researchAuditTime', title:'审核时间',sort:true ,width:120}
+                    ,{field:'researchState', title:'状态', width:100 , templet:function (res) {
+                        if (res.researchState === 0) {
+                            return '<span style="color:#f4c34e">待审核</span>';
+                        }else if (res.researchState === 1){
+                            return '<span style="color:#3E8AF4">审核通过</span>';
+                        }else if (res.researchState === 2){
+                            return '<span style="color:#e75269">审核不通过</span>';
+                        }
+                    }}
+                    ,{fixed: 'right', title:'操作', toolbar: '#bar', width:190}
+
+                ]
+            ]
+            ,page: true
+        });
+
+        //日期
+        laydate.render({
+            elem: '#uploadDate',
+            type: 'datetime'
+        });
+        laydate.render({
+            elem: '#auditDate',
+            type: 'datetime'
+        });
+        //右侧操作栏的对应操作
+        table.on('tool(table)',function(obj){
+            if(obj.event === 'reupload'){
+                findById(obj.data.researchId);
+            } else if(obj.event === 'del'){
+                layer.confirm('真的删除行么', function(index){
+                    $.ajax({
+                        url: '/research/'+obj.data.researchId,
+                        type: 'DELETE',
+                        dataType: 'JSON',
+                        success: function (res) {
+                            layer.msg(res.message,{
+                                icon:1
+                            },function (){
+                            });
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+        });
+
+        function findById(id){
+            $("iframe",parent.document.body).attr("src","/research/"+id);
+            let frame = $("#iframe");
+
+            let frameheight = $(window).height();
+            frame.css("height",frameheight);
+        }
+        //头工具栏事件
+        table.on('toolbar(table)', function(obj){
+            let checkStatus = table.checkStatus(obj.config.id); //获取选中行状态
+            switch(obj.event){
+                case 'getCheckData':
+                    $.ajax({
+                        url: '/research/'+checkStatus.data[0].researchId,
+                        type: 'GET',
+                        dataType: 'JSON',
+                        success: function (res) {
+                            layer.msg(res.message,{
+                                icon:1
+                            },function (){
+                                location.href = '/rePostResearch'
+                            });
+                        }
+                    });
+                    break;
+            };
+        });
+
+        //条件搜索拼接参数与重载表格
+        let active = {
+            reload: function(){
+                let type = $('#type').val();
+                let uploadDate = $('#uploadDate').val();
+                let auditDate = $('#auditDate').val();
+                let state = $('#state').val();
+                //执行重载
+                table.reload('table', {
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    , method: 'GET'
+                    ,where: {
+                        researchType: type,
+                        researchCommitTime: uploadDate,
+                        researchAuditTime: auditDate,
+                        researchState: state
+                    }
+                });
+            }
+        };
+        $('.demoTable .layui-btn').on('click', function(){
+            let type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>
+
+</body>
+</html>

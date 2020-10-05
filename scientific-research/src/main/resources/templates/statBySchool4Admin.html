@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>layui调试</title>
+    <th:block th:replace="common :: link"/>
+    <style>
+        body{margin: 10px;}
+    </style>
+</head>
+<body>
+
+
+
+<form class="layui-form">
+    <div class="layui-form-item">
+        <input type="hidden" name="userId" th:value="${session.user.userId}">
+        <div class="layui-inline">
+            <label class="layui-form-label">年份</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="year" name="year" placeholder="yyyy">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <select name="range">
+                <option value="1" >上半年</option>
+                <option value="2" >下半年</option>
+            </select>
+        </div>
+        <div class="layui-inline">
+            <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">绘制</button>
+        </div>
+    </div>
+</form>
+<div id="tab1" style="width: 600px;height:400px;"></div>
+
+
+
+
+<th:block th:replace="common :: script"/>
+<!-- 引入 ECharts 文件 -->
+<script th:src="@{/js/echarts.min.js}"></script>
+
+<script>
+    layui.use(['form','upload','table','laydate'], function(){
+        let table = layui.table
+            ,form = layui.form
+            ,router = layui.router()
+            ,upload = layui.upload
+            ,layer = layui.layer
+            ,laydate = layui.laydate;
+
+
+        //年选择器
+        laydate.render({
+            elem: '#year'
+            ,type: 'year'
+            ,value: '2020'
+            ,isInitValue: true
+            ,min: '2000-01-01'
+            ,max: '2020-12-31'
+        });
+
+        //监听提交
+        form.on('submit(demo1)', function(data){
+
+            $.ajax({
+                url:'/halfYear/school',
+                type:'GET',
+                data:data.field,
+                dataType:'json',
+                success:function (res) {
+                    let mp = [];
+                    $.each(res,function (key, value) {
+                        mp.push({"value":value,"name":key})
+                    });
+                    draw(mp,'tab1');
+                }
+            });
+            //阻止页面跳转
+            return false;
+        });
+
+    });
+    function draw(mp,tab){
+        let myChart = echarts.init(document.getElementById(tab));
+        let option = {
+            title: {
+                text: '研究成果统计',
+                x: 'center'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'right'
+            },
+            series: [
+                {
+                    name: '通过率',
+                    type: 'pie',
+                    data: mp,
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        },
+                        normal:{
+                            label:{
+                                show : true,
+                                formatter : '{b} : {c} ({d}%)'
+                            },
+                            labelLine:{show:true}
+                        }
+                    }
+
+                }
+            ]
+        };
+        myChart.clear();
+        // 为echarts对象加载数据
+        myChart.setOption(option,true);
+    }
+
+
+</script>
+
+</body>
+</html>

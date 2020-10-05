@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <title>广厦学院教师科研成果管理系统</title>
+
+    <th:block th:replace="common :: link"/>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo">广厦学院</div>
+
+        <input type="hidden" id="userHid" th:value="${session.user.userId}">
+        <input type="hidden" id="userHstate" th:value="${session.user.userState}">
+        <input type="hidden" id="Hid" th:value="0">
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;" th:text="${session.user.userRealName}">
+                </a>
+                <dl class="layui-nav-child">
+                    <dd class="top"><a href="javascript:;" isrc="setPass">修改密码</a></dd>
+                </dl>
+            </li>
+            <li class="layui-nav-item"><a href="/logout">退出</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul class="layui-nav layui-nav-tree"  lay-filter="test">
+                <!--0表示管理员 显示后台管理界面-->
+                <th:block th:if="${session.user.userRole == 0}">
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">用户管理</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="userList">用户列表</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">菜单管理</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="">菜单列表</a></dd>
+                        </dl>
+                    </li>
+                </th:block>
+                <!--1表示科研人员-->
+                <th:block th:if="${session.user.userRole == 1}">
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">个人信息</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="info">我的信息</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">科研成果</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="researchList4Admin">成果列表</a></dd>
+                        </dl>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="auditList4Admin">审核</a></dd>
+                        </dl>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="addNotice">发布公告</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">统计</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="statByHalfYear4Admin">按学年统计</a></dd>
+                        </dl>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="statBySchool4Admin">按院系统计</a></dd>
+                        </dl>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="statByPerson4Admin">按个人统计</a></dd>
+                        </dl>
+                    </li>
+                </th:block>
+                <!--2表示教师-->
+                <th:block th:if="${session.user.userRole == 2}">
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">个人信息</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="info">我的信息</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">科研成果</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="addResearch">成果申报</a></dd>
+                            <dd class="left"><a href="javascript:;" isrc="researchList4User">审核结果</a></dd>
+                            <dd class="left"><a href="javascript:;" isrc="noticeList">查看公告</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">统计</a>
+                        <dl class="layui-nav-child">
+                            <dd class="left"><a href="javascript:;" isrc="stat4User">论文通过率</a></dd>
+                        </dl>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-body">
+
+        <div id="p-content" style="margin: auto;top: 0;left: 0;right: 0;bottom: 0;position: absolute;width: 300px;height: 50px">
+            <span style="font-size: 30px; font-weight: bold; font-style: italic" th:text="${session.user.userRealName}"></span> <span style="font-size: 30px">，欢迎你</span>
+        </div>
+
+        <iframe frameborder="0" id="iframe" scrolling="yes" style="width: 100%" src=""></iframe>
+    </div>
+
+
+    <div class="layui-footer">
+        <!-- 底部固定区域 -->
+        © 广厦学院教师科研成果管理系统
+    </div>
+</div>
+
+<th:block th:replace="common :: script"/>
+
+<script>
+    //JavaScript代码区域
+    layui.use(['element','layer'], function(){
+        let element = layui.element
+           ,layer = layui.layer;
+    });
+
+    let userHstate = $("#userHstate").val();
+    //初始密码不能跳转
+    $(".left a").on("click",function () {
+        if (userHstate === '0') {
+            layer.alert('当前为初始密码，修改密码之后可以正常使用系统')
+        }else{
+            let address = $(this).attr("isrc");
+            ifJump(address);
+        }
+    });
+    //修改密码按钮跳转
+    $(".top a").on("click",function () {
+        let address = $(this).attr("isrc");
+        ifJump(address);
+    });
+    //iframe内部跳转
+    function ifJump (address) {
+        $("iframe").attr("src",address);
+        $("#p-content").hide();
+        let frame = $("#iframe");
+        let frameheight = $(window).height();
+        frame.css("height",frameheight);
+    }
+</script>
+</body>
+</html>

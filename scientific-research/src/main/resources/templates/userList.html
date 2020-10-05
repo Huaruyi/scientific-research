@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>layui调试</title>
+    <th:block th:replace="common :: link"/>
+    <style>
+        body{margin: 10px;}
+        .demo-carousel{height: 200px; line-height: 200px; text-align: center;}
+    </style>
+</head>
+<body>
+<!--条件搜索-->
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>条件搜索</legend>
+</fieldset>
+<div class="demoTable">
+    工号：
+    <div class="layui-inline">
+        <input class="layui-input" type="text" id="userId" placeholder="输入工号查找" autocomplete="off">
+    </div>
+    姓名：
+    <div class="layui-inline">
+        <input class="layui-input" type="text" id="userName" placeholder="输入姓名查找" autocomplete="off">
+    </div>
+
+    <button class="layui-btn" data-type="reload"><i class="layui-icon layui-icon-search"></i> 搜索</button>
+</div>
+
+<table class="layui-hide" id="table" lay-filter="table"></table>
+
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add"><i class="layui-icon">&#xe654;</i>添加用户</button>
+        <button class="layui-btn layui-btn-sm" id="file"><i class="layui-icon">&#xe654;</i>批量导入用户</button>
+    </div>
+</script>
+<script type="text/html" id="bar">
+    {{# if(d.userState == 1){ }}
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="reset">重置密码</a>
+    {{# } }}
+    {{# if(d.userState != 2){ }}
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{# } }}
+    {{# if(d.userState == 2){ }}
+        <a class="layui-btn layui-btn-xs" lay-event="recover">恢复</a>
+    {{# } }}
+</script>
+
+
+<th:block th:replace="common :: script"/>
+
+<script>
+    layui.use(['upload','table','laytpl'], function(){
+        let table = layui.table
+            ,form = layui.form
+            ,router = layui.router()
+            ,upload = layui.upload
+            ,layer = layui.layer
+            ,laytpl = layui.laytpl;
+
+        //温馨提示：默认由前端自动合计当前行数据。从 layui 2.5.6 开始： 若接口直接返回了合计行数据，则优先读取接口合计行数据。
+        //详见：https://www.layui.com/doc/modules/table.html#totalRow
+        table.render({
+            elem: '#table'
+            ,url:'/users'
+            ,toolbar: '#toolbar'
+            ,title: '用户数据表'
+            ,totalRow: true
+            ,cols: [
+                [
+                    {field:'userId', title:'工号', width:70, fixed: 'left', unresize: true}
+                    ,{field:'userRealName', title:'姓名', width:80, edit: 'text'}
+                    ,{field:'userGender', title:'性别', width:75, sort: true, templet:function (res) {
+                        if (res.userGender === 0) {
+                            return '<span>女</span>';
+                        }else if (res.userGender === 1){
+                            return '<span>男</span>';
+                        }
+                    }}
+                    ,{field:'userBirth', title:'生日', width:120, sort: true, edit: 'text'}
+                    ,{field:'userTitle', title:'编制', width:80, sort: true, edit: 'text'}
+                    ,{field:'userEducationBackground', title:'学历', width:80, edit: 'text'}
+                    ,{field:'school.schoolName', title:'所在学院', width:120, edit: 'text', templet:'<div>{{d.school.schoolName}}</div>'}
+                    ,{field:'userCreateTime', title:'创建时间', sort:true ,width:120}
+                    ,{field:'userLastUpdateTime', title:'最近修改时间',sort:true ,width:120}
+                    ,{field:'userState', title:'状态', width:100 , templet:function (res) {
+                        if (res.userState === 0) {
+                            return '<span style="color:#f4c34e">初始密码</span>';
+                        }else if (res.userState === 1){
+                            return '<span style="color:#3E8AF4">正常</span>';
+                        }else{
+                            return '<span style="color:red">已删除</span>';
+                        }
+                    }}
+                    ,{fixed: 'right', title:'操作', toolbar: '#bar', width:190}
+
+                ]
+            ]
+            ,page: true
+        });
+
+        table.on('tool(table)',function(obj){
+            if(obj.event === 'reset'){
+                layer.confirm('真的重置密码么', function(index){
+                    //state设置为0 表示密码被重置
+                    obj.data.userState = 0;
+                    obj.data.userPassword = "123456";
+                    change(obj);
+                    layer.close(index);
+                });
+            } else if(obj.event === 'del'){
+                layer.confirm('真的删除行么', function(index){
+                    obj.data.userState = 2;
+                    //state设置为2 表示删除
+                    change(obj);
+                    //obj.del();
+                    layer.close(index);
+                });
+            } else if (obj.event === 'recover') {
+                layer.confirm('真的要恢复么', function(index){
+                    obj.data.userState = 1;
+                    //state设置为1 表示恢复
+                    change(obj);
+                    layer.close(index);
+                });
+            }
+        });
+
+        //编辑
+        function change(obj){
+            //layer.alert('提交的数据：<br>'+ JSON.stringify(obj.data));
+            $.ajax({
+                url: '/user',
+                data: {
+                    userId : obj.data.userId,
+                    userState : obj.data.userState,
+                    userPassword : obj.data.userPassword
+                },
+                type: 'PUT',
+                dataType: 'JSON',
+                success: function (res) {
+                    layer.msg(res.message,{
+                        icon:1
+                        ,time: 1000 //1s，假装处理数据
+                    },function (){
+                        location.reload();
+                    });
+                }
+            });
+        }
+        //表格直接编辑
+        table.on('edit(table)', function(obj){
+            change(obj);
+        });
+
+        //文件上传，上传excel批量导入用户
+        let uploadInst = upload.render({
+            elem: '#file'
+            ,url: '/saves'
+            ,accept:'file'
+            ,done: function(res){
+                if (res.result){
+                    layer.msg(res.message,{
+                        icon:1
+                        ,time: 1000 //1s，假装处理数据
+                    },function (){
+                        location.reload();
+                    });
+
+                } else if (!res.result) {
+                    layer.msg(res.message,{icon:5},function (){});
+                }
+            }
+            ,error: function(){
+                //演示失败状态，并实现重传
+                let demoText = $('#demoText');
+                demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                demoText.find('.demo-reload').on('click', function(){
+                    uploadInst.upload();
+                });
+            }
+        });
+
+        //工具栏事件
+        table.on('toolbar(table)', function(obj){
+            switch(obj.event){
+                //添加单个用户
+                case 'add':
+                    layer.open({
+                        //type=2代表使用弹出层页面
+                        type: 2,
+                        //弹出页面为addUser.html
+                        content: '/addUser',
+                        //大小
+                        area:["800px","500px"],
+                        title:'添加用户',
+                        shadeClose: true,
+                        end: function () {  //刷新页面
+                            location.reload();
+                        }
+                    });
+                    break;
+            }
+        });
+
+
+        //条件搜索
+        let active = {
+            reload: function(){
+                let userId = $('#userId').val();
+                let userName = $('#userName').val();
+                //执行重载
+                table.reload('table', {
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    , method: 'GET'
+                    ,where: {
+                        userId: userId,
+                        userRealName: userName
+                    }
+                });
+            }
+        };
+        $('.demoTable .layui-btn').on('click', function(){
+            let type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+</script>
+
+</body>
+</html>
