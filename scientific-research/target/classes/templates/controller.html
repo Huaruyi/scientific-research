@@ -22,6 +22,7 @@
                     <dd class="top"><a href="javascript:;" isrc="setPass">修改密码</a></dd>
                 </dl>
             </li>
+
             <li class="layui-nav-item"><a href="/logout">退出</a></li>
         </ul>
     </div>
@@ -29,84 +30,17 @@
     <div class="layui-side layui-bg-black">
         <div class="layui-side-scroll">
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
-            <ul class="layui-nav layui-nav-tree"  lay-filter="test">
+            <ul class="layui-nav layui-nav-tree"  lay-filter="nav">
+                <input type="hidden" id="userHRole" th:value="${session.user.userRole}">
                 <!--0表示管理员 显示后台管理界面-->
-                <th:block th:if="${session.user.userRole == 0}">
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">用户管理</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="userList">用户列表</a></dd>
-                        </dl>
-                    </li>
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">菜单管理</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="">菜单列表</a></dd>
-                        </dl>
-                    </li>
-                </th:block>
                 <!--1表示科研人员-->
-                <th:block th:if="${session.user.userRole == 1}">
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">个人信息</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="info">我的信息</a></dd>
-                        </dl>
-                    </li>
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">科研成果</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="researchList4Admin">成果列表</a></dd>
-                        </dl>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="auditList4Admin">审核</a></dd>
-                        </dl>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="addNotice">发布公告</a></dd>
-                        </dl>
-                    </li>
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">统计</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="statByHalfYear4Admin">按学年统计</a></dd>
-                        </dl>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="statBySchool4Admin">按院系统计</a></dd>
-                        </dl>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="statByPerson4Admin">按个人统计</a></dd>
-                        </dl>
-                    </li>
-                </th:block>
                 <!--2表示教师-->
-                <th:block th:if="${session.user.userRole == 2}">
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">个人信息</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="info">我的信息</a></dd>
-                        </dl>
-                    </li>
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">科研成果</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="addResearch">成果申报</a></dd>
-                            <dd class="left"><a href="javascript:;" isrc="researchList4User">审核结果</a></dd>
-                            <dd class="left"><a href="javascript:;" isrc="noticeList">查看公告</a></dd>
-                        </dl>
-                    </li>
-                    <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">统计</a>
-                        <dl class="layui-nav-child">
-                            <dd class="left"><a href="javascript:;" isrc="stat4User">论文通过率</a></dd>
-                        </dl>
-                    </li>
-                </th:block>
+
             </ul>
         </div>
     </div>
 
     <div class="layui-body">
-
         <div id="p-content" style="margin: auto;top: 0;left: 0;right: 0;bottom: 0;position: absolute;width: 300px;height: 50px">
             <span style="font-size: 30px; font-weight: bold; font-style: italic" th:text="${session.user.userRealName}"></span> <span style="font-size: 30px">，欢迎你</span>
         </div>
@@ -128,11 +62,72 @@
     layui.use(['element','layer'], function(){
         let element = layui.element
            ,layer = layui.layer;
+
+
+        let url = "";
+        let userHRole = $("#userHRole").val();
+        if (userHRole === '2') {
+            url = "/menus/teacher";
+        }else if (userHRole === '1') {
+            url = "/menus/researchAdmin";
+        }else if(userHRole === '0'){
+            url = "/menus/root";
+        }
+        $.get(url,function (res) {
+            if (res) {
+                getMenus(res.data);
+                element.render('nav');
+            }
+        });
+
+
     });
+
+
+
+    function getMenus(data){
+        //回显选中
+        let ul=$("<ul class='layui-nav layui-nav-tree' lay-filter='test'></ul>");
+        for(let i=0;i < data.length;i++){
+            let node=data[i];
+            let li=$("<li class='layui-nav-item' flag='"+node.id+"'></li>");
+            let a=$("<a class='' href='javascript:;'>"+node.title+"</a>");
+            li.append(a);
+            //获取子节点
+            let childArry = node.children;
+            if(childArry.length>0){
+                a.append("<span class='layui-nav-more'></span>");
+                let dl=$("<dl class='layui-nav-child'></dl>");
+                for (let y in childArry) {
+                    /*<a href="javascript:;" isrc="info">
+                    let dd=$("<dd><a href='"+childArry[y].url+"'>"+childArry[y].name+"</a></dd>");*/
+                    let dd=$("<dd class='left'><a href='javascript:;' isrc='"+childArry[y].url+"'>"+childArry[y].title+"</a></dd>");
+                    //判断选中状态
+                    /*if(pathUri.indexOf(childArry[y].url)>0){
+                        li.addClass("layui-nav-itemed");
+                        dd.addClass("layui-this")
+                    }*/
+                    dl.append(dd);
+                }
+                li.append(dl);
+            }
+            ul.append(li);
+        }
+        $(".layui-side-scroll").append(ul);
+    }
+
+
 
     let userHstate = $("#userHstate").val();
     //初始密码不能跳转
-    $(".left a").on("click",function () {
+
+    /*
+    *  on()：适用于当前及未来的元素（比如由脚本创建的新元素）
+    *  $(selector).on(event,childSelector,data,function,map)
+    *  .layui-side 是已有的，可以用来触发事件
+    *  .left a 是动态生成的 所以对应childSelector
+    * */
+    $(".layui-side").on("click",".left a",function () {
         if (userHstate === '0') {
             layer.alert('当前为初始密码，修改密码之后可以正常使用系统')
         }else{

@@ -22,42 +22,59 @@ public class ResearchNumController {
     @Resource
     ResearchNumRepository researchNumRepository;
 
+
+    /**
+     * 查询所有成果数量
+     * @param pageable 分页参数
+     * @return 分页结果
+     */
     @GetMapping("/researchNums")
     public Object selectAll(TablePageable pageable){
-        PageRequest pageRequest = pageable.bulidPageRequest();
-        Page<ResearchNum> researchNums = researchNumRepository.findAll(pageRequest);
-        return DataGridUtil.buildResult(researchNums);
+        try {
+            PageRequest pageRequest = pageable.bulidPageRequest();
+            Page<ResearchNum> researchNums = researchNumRepository.findAll(pageRequest);
+            return DataGridUtil.buildResult(researchNums);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CommonResult<>(444,false,"查询失败");
+        }
     }
+
 
     /**
      * 提供下载所需数据
      * 需要手动封装VO对象
-     * @return
+     * @return 下载所需数据
      */
     @GetMapping("/researchNums/download")
     public CommonResult download(){
-        List<ResearchNum> researchNums = researchNumRepository.findAll();
-        List<ResearchNumVO> researchNumVOs= new ArrayList<>(20);
-        for (ResearchNum researchNum : researchNums) {
-            //创建对象用于存放
-            ResearchNumVO researchNumVO = new ResearchNumVO();
-            researchNumVO.setUserId(researchNum.getUser().getUserId());
-            researchNumVO.setUserRealName(researchNum.getUser().getUserRealName());
-            researchNumVO.setUserBirth(researchNum.getUser().getUserBirth());
-            String gender = "男";
-            if (researchNum.getUser().getUserGender() == 0){
-                gender = "女";
+        try {
+            List<ResearchNum> researchNums = researchNumRepository.findAll();
+            List<ResearchNumVO> researchNumVOs= new ArrayList<>(20);
+            for (ResearchNum researchNum : researchNums) {
+                //创建对象用于存放
+                ResearchNumVO researchNumVO = new ResearchNumVO();
+                researchNumVO.setUserId(researchNum.getUser().getUserId());
+                researchNumVO.setUserRealName(researchNum.getUser().getUserRealName());
+                researchNumVO.setUserBirth(researchNum.getUser().getUserBirth());
+                String gender = "男";
+                if (researchNum.getUser().getUserGender() == 0){
+                    gender = "女";
+                }
+                researchNumVO.setUserGender(gender);
+                researchNumVO.setUserEducationBackground(researchNum.getUser().getUserEducationBackground());
+                researchNumVO.setSchoolName(researchNum.getUser().getSchool().getSchoolName());
+                researchNumVO.setUserTitle(researchNum.getUser().getUserTitle());
+                researchNumVO.setUserCreateTime(researchNum.getUser().getUserCreateTime());
+                researchNumVO.setPaperNum(researchNum.getPaperNum());
+                researchNumVO.setPatentNum(researchNum.getPatentNum());
+                researchNumVO.setTaskNum(researchNum.getTaskNum());
+                researchNumVOs.add(researchNumVO);
             }
-            researchNumVO.setUserGender(gender);
-            researchNumVO.setUserEducationBackground(researchNum.getUser().getUserEducationBackground());
-            researchNumVO.setSchoolName(researchNum.getUser().getSchool().getSchoolName());
-            researchNumVO.setUserTitle(researchNum.getUser().getUserTitle());
-            researchNumVO.setUserCreateTime(researchNum.getUser().getUserCreateTime());
-            researchNumVO.setPaperNum(researchNum.getPaperNum());
-            researchNumVO.setPatentNum(researchNum.getPatentNum());
-            researchNumVO.setTaskNum(researchNum.getTaskNum());
-            researchNumVOs.add(researchNumVO);
+            return new CommonResult<>(200,true,"OK",researchNumVOs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CommonResult<>(444,false,"下载失败");
         }
-        return new CommonResult<>(200,true,"OK",researchNumVOs);
     }
 }

@@ -1,7 +1,9 @@
 package com.ljj.config;
 
 
+import com.ljj.component.LoginHandlerInterceptor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -35,5 +37,18 @@ public class MyMvcConfig implements WebMvcConfigurer {
         registry.addViewController("/noticeList").setViewName("noticeList");
         registry.addViewController("/noticeDetail").setViewName("noticeDetail");
         registry.addViewController("/noticeDetail/").setViewName("noticeDetail");
+        registry.addViewController("/menuList").setViewName("menuList");
+    }
+
+    /**
+     * 注册拦截器
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        //拦截所有请求
+        registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**")
+                //不拦截一下请求
+                .excludePathPatterns("/","/index","/index.html","/login")
+                .excludePathPatterns("/css/**","/images/**/","/js/**","/layui/**","/layuiadmin/**");
     }
 }

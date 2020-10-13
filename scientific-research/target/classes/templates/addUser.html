@@ -18,7 +18,7 @@
         <div class="layui-inline">
             <label class="layui-form-label">密码</label>
             <div class="layui-input-inline">
-                <input type="password" name="userPassword" placeholder="请输入密码" autocomplete="off" class="layui-input">
+                <input type="password" name="userPassword"  placeholder="请输入密码" autocomplete="off" class="layui-input">
             </div>
         </div>
     </div>
@@ -91,10 +91,6 @@
 </form>
 
 
-
-
-
-
 <th:block th:replace="common :: script"/>
 <script>
     layui.use(['form', 'layedit', 'laydate'], function(){
@@ -130,7 +126,6 @@
                         $("#school").append(new Option(item.schoolName,item.schoolId))
                     });
                     form.render('select','school');
-
                 }
             });
         });
@@ -140,9 +135,6 @@
             //提交前做一些初始化
             data.field.userState = 0;
             data.field.userPassword = "123456";
-            layer.alert(JSON.stringify(data.field), {
-                title: '最终的提交信息'
-            });
             $.ajax({
                 url:'/user',
                 type:'POST',

@@ -47,7 +47,6 @@ public class ResearchController {
     @PostMapping("/upload")
     @ResponseBody
     public CommonResult uploadPath(@RequestParam(value = "file", required = false) MultipartFile file) {
-
         try {
             // 获取前台上传的文件名
             String originalFilename = file.getOriginalFilename();
@@ -99,7 +98,6 @@ public class ResearchController {
     @PostMapping("/research")
     @ResponseBody
     public CommonResult add(Research research){
-
         try {
             //判断是第一次传还是重传
             //如果researchId不为空则说明是重传
@@ -139,8 +137,9 @@ public class ResearchController {
         }
     }
 
+
     /**
-     *
+     * 审核
      * @param research 前台传来的对象
      * @return 操作结果
      */
@@ -155,10 +154,6 @@ public class ResearchController {
             }
             //状态为1或者2通过或者不通过都需要设置审核时间
             research1.setResearchAuditTime(LocalDateTime.now());
-            //重新上传则需修改替换为新内容
-            if (StrUtil.isNotBlank(research.getResearchPath())){
-                research1.setResearchPath(research.getResearchPath());
-            }
             researchRepository.save(research1);
             return new CommonResult<>(200, true,"操作成功");
         } catch (Exception e) {
@@ -199,6 +194,7 @@ public class ResearchController {
         }
     }
 
+
     /**
      * 来到编辑界面
      * @param researchId 前台传来的Id
@@ -219,12 +215,12 @@ public class ResearchController {
      * @param research 前台传来的对象
      * @return 分页结果
      */
-    @GetMapping("/researchs")
+    @GetMapping("/researches")
     @ResponseBody
     public Object selectAll(String userId, Integer schoolId, TablePageable pageable, Research research){
         try {
             PageRequest pageRequest = pageable.bulidPageRequest();
-            Page<Research> researchs = researchRepository.findAll(new Specification<T>() {
+            Page<Research> researches = researchRepository.findAll(new Specification<T>() {
                 @Override
                 public Predicate toPredicate(Root<T> root, CriteriaQuery<?> cq, CriteriaBuilder cb) {
                     List<Predicate> predicates = new ArrayList<>();
@@ -235,11 +231,6 @@ public class ResearchController {
                     if (StrUtil.isNotBlank(userId)){
                         predicates.add(cb.equal(root.<User>get("user").get("userId"),userId));
                     }
-                    /*//只查询当前学院
-                    if (ObjectUtil.isNotNull(schoolId)){
-                        predicates.add(cb.equal(root.<School>get("user").get("school").get("schoolId"),schoolId));
-                    }*/
-
                     //拼接搜索条件：成果类型
                     String researchType = research.getResearchType();
                     if (StrUtil.isNotBlank(researchType)){
@@ -250,7 +241,7 @@ public class ResearchController {
                     if (ObjectUtil.isNotNull(researchCommitTime)){
                         predicates.add(cb.like(root.get("researchCommitTime").as(String.class),"%" + researchCommitTime.toLocalDate() + "%"));
                     }
-                    //拼接搜索条件：成果审核（上传）时间
+                    //拼接搜索条件：成果审核时间
                     LocalDateTime researchAuditTime = research.getResearchAuditTime();
                     if (ObjectUtil.isNotNull(researchAuditTime)){
                         predicates.add(cb.like(root.get("researchCommitTime").as(String.class),"%" + researchAuditTime.toLocalDate() + "%"));
@@ -264,12 +255,10 @@ public class ResearchController {
                     return null;
                 }
             },pageRequest);
-            return DataGridUtil.buildResult(researchs);
+            return DataGridUtil.buildResult(researches);
         } catch (Exception e) {
             e.printStackTrace();
-            return new CommonResult<>(444,false, "操作失败");
+            return new CommonResult<>(444,false,"查询失败");
         }
     }
-
-
 }

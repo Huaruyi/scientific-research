@@ -2,11 +2,9 @@ package com.ljj.entity;
 
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Entity
@@ -17,13 +15,37 @@ public class Menu implements Serializable {
      */
     @Id
     @GeneratedValue
-    private Integer menuId;
+    private Integer id;
     /**
      * 菜单名称
      */
-    private String menuName;
+    private String title;
     /**
      * 父ID
      */
-    private Integer menuParentId;
+    private Integer parentId;
+    /**
+     * 父名称
+     */
+    private String parentName;
+    /**
+     * url
+     */
+    private String url;
+    /**
+     * 状态
+     */
+    private Integer state;
+    /**
+     * 子菜单
+     */
+    @OneToMany
+    private List<Menu> children;
+    /**
+     * 权限
+     */
+    private String authority;
+
+
+
 }

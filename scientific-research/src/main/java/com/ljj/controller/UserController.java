@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,11 +49,13 @@ public class UserController {
 
     private final static int ZERO = 0;
     private final static int ONE = 1;
-    private final static int TWO = 2;
+
 
     /**
      * 修改密码
      * @param user 前台传来的数据
+     * @param session user
+     * @return 自定义
      */
     @PutMapping("/userSetPass")
     public CommonResult updatePass(User user, HttpSession session){
@@ -62,7 +65,7 @@ public class UserController {
             //设置新密码
             user1.setUserPassword(user.getUserPassword());
             //改密之后设置状态为1
-            //0为初始密码状态 需要改密 1为正常 2为被删除
+            //0为初始密码状态 需要改密 1为正常
             if (user1.getUserState() == ZERO){
                 user1.setUserState(ONE);
             }
@@ -78,7 +81,6 @@ public class UserController {
         } catch (Exception e) {
             e.printStackTrace();
             return new CommonResult<>(444,false,"改密失败");
-
         }
     }
 
@@ -86,6 +88,7 @@ public class UserController {
     /**
      * 更新
      * @param user 前台传来的数据
+     * @return 自定义
      */
     @PutMapping("/user")
     public CommonResult update(User user){
@@ -126,14 +129,14 @@ public class UserController {
         } catch (Exception e) {
             e.printStackTrace();
             return new CommonResult<>(444,false,"更新失败");
-
         }
     }
 
 
     /**
-     * 添加
+     * 添加一个
      * @param user 前台传来的数据
+     * @return 自定义
      */
     @PostMapping("/user")
     public CommonResult add(User user){
@@ -164,7 +167,7 @@ public class UserController {
     /**
      * 批量添加
      * @param file 上传的文件
-     * @return
+     * @return 自定义
      */
     @RequestMapping("/saves")
     public CommonResult saves(@RequestParam(value = "file", required = false) MultipartFile file) {
@@ -199,7 +202,6 @@ public class UserController {
                 }else {
                     user.setUserId(id);
                 }
-
                 //设置密码  无论给定什么默认都应该是123456
                 user.setUserPassword("123456");
                 //设置姓名
@@ -252,61 +254,69 @@ public class UserController {
             userRepository.saveAll(users);
             //批量保存researchNums
             researchNumRepository.saveAll(researchNums);
+            return new CommonResult<>(200,true,"批量添加成功");
         } catch (IOException e) {
             e.printStackTrace();
             return new CommonResult<>(444,false,"批量添加失败");
         }
-        return new CommonResult<>(200,true,"批量添加成功");
     }
 
 
     /**
      * 查询所有用户 不包括1001管理员
      * @param pageable 分页参数
-     * @return
+     * @param user 前台传来的对象
+     * @return 自定义分页
      */
     @GetMapping("/users")
-    public Object selectAll(TablePageable pageable, User user, HttpSession session){
-        PageRequest pageRequest = pageable.bulidPageRequest();
-        Page<User> users = userRepository.findAll(new Specification<T>() {
-            @Override
-            public Predicate toPredicate(Root<T> root, CriteriaQuery<?> cq, CriteriaBuilder cb) {
-               List<Predicate> predicates = new ArrayList<>();
-                //字符串是否为空白 空白的定义如下：
-                //1、为null
-                //2、为不可见字符（如空格）
-                //3、""
-               if (StrUtil.isNotBlank(user.getUserId())){
-                   //模糊搜索工号
-                   predicates.add(cb.like(root.get("userId"), "%" + user.getUserId() + "%"));
-               }
-               if (StrUtil.isNotBlank(user.getUserRealName())){
-                   predicates.add(cb.like(root.get("userRealName"), "%" + user.getUserRealName() + "%"));
-               }
-               //不查询自己
-               predicates.add(cb.notEqual(root.get("userId"),1001));
-               cq.where(predicates.toArray(new Predicate[predicates.size()]));
-               return null;
-            }
-        },pageRequest);
-        return DataGridUtil.buildResult(users);
+    public Object selectAll(TablePageable pageable, User user){
+        try {
+            PageRequest pageRequest = pageable.bulidPageRequest();
+            Page<User> users = userRepository.findAll(new Specification<T>() {
+                @Override
+                public Predicate toPredicate(Root<T> root, CriteriaQuery<?> cq, CriteriaBuilder cb) {
+                   List<Predicate> predicates = new ArrayList<>();
+                    //字符串是否为空白 空白的定义如下：
+                    //1、为null
+                    //2、为不可见字符（如空格）
+                    //3、""
+                   if (StrUtil.isNotBlank(user.getUserId())){
+                       //模糊搜索工号
+                       predicates.add(cb.like(root.get("userId"), "%" + user.getUserId() + "%"));
+                   }
+                   if (StrUtil.isNotBlank(user.getUserRealName())){
+                       predicates.add(cb.like(root.get("userRealName"), "%" + user.getUserRealName() + "%"));
+                   }
+                   //不查询自己
+                   predicates.add(cb.notEqual(root.get("userId"),1001));
+                   cq.where(predicates.toArray(new Predicate[predicates.size()]));
+                   return null;
+                }
+            },pageRequest);
+            return DataGridUtil.buildResult(users);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CommonResult<>(444,false,"查询失败");
+        }
     }
 
 
     /**
      * 查询所有教师
      * @param pageable 分页参数
-     * @return
+     * @return 自定义分页
      */
     @GetMapping("/teachers")
-    public Map<String, Object> selectAllteachers(TablePageable pageable){
-        PageRequest pageRequest = pageable.bulidPageRequest();
-        //2表示教师，查询所有教师
-        Page<User> teachers = userRepository.findByUserRole(2, pageRequest);
-        for (User teacher : teachers) {
-            log.info("@@@@@@@@@@@@@@@@"+teacher);
+    public Object selectAllteachers(TablePageable pageable){
+        try {
+            PageRequest pageRequest = pageable.bulidPageRequest();
+            //2表示教师，查询所有教师
+            Page<User> teachers = userRepository.findByUserRole(2, pageRequest);
+            return DataGridUtil.buildResult(teachers);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CommonResult<>(444,false,"查询失败");
         }
-        return DataGridUtil.buildResult(teachers);
     }
 
 }

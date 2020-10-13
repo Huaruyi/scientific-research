@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>layui调试</title>
+    <th:block th:replace="common :: link"/>
+    <link rel="stylesheet" th:href="@{layui/layui_exts/dtree/dtree.css}">
+    <link rel="stylesheet" th:href="@{layui/layui_exts/dtree/font/dtreefont.css}">
+    <style>
+        body{margin: 10px;}
+        .demo-carousel{height: 200px; line-height: 200px; text-align: center;}
+    </style>
+</head>
+<body>
+
+<div style="height: 550px;overflow: auto;" id="toolbarDiv">
+    <!--使用dtree组件-->
+    <ul id="demoTree1" class="dtree" data-id="0"></ul>
+</div>
+
+
+<th:block th:replace="common :: script"/>
+
+<script>
+    let data;  //用于下方dtree加载菜单使用
+    //页面加载运行函数
+    $(function () {
+        //get请求的 ajax  简写方式
+        //与之相同的还有$.post() 用于发送post请求
+        $.get("/menus",function (res) {
+            data = res.data;
+
+        });
+    });
+    layui.config({
+        base: '/layui/layui_exts/dtree/' //外部第三方js  dtree
+    }).extend({
+        dtree: 'dtree'
+    }).use(['element','dtree','util','layer'], function(){
+        let dtree = layui.dtree
+            ,layer = layui.layer
+            ,util = layui.util
+            ,$ = layui.$;
+
+        let DTree = dtree.render({
+            elem: '#demoTree1'  //id
+            ,data: data
+            ,toolbar:true
+            //自定义弹出框显示内容
+            ,toolbarBtn:[
+                //添加时的内容
+                [
+                    {"label":"页面地址","name":"url","type":"text"},
+                    {"label":"权限","name":"authority","type":"select","optionsData":function(){
+                            return {"1":"科研管理员","2":"教师","12":"科研管理员和教师","0":"系统管理员"};
+                        }},
+                    {"value":"重置按钮","type":"reset"},
+                    {"value":"提交","type":"submit","defElem":"btn"},
+                ],
+                //修改时的内容
+                [
+                    {"label":"页面地址","name":"url","type":"text"},
+                    {"label":"权限","name":"authority","type":"select","optionsData":function(){
+                            return {"1":"科研管理员","2":"教师","12":"科研管理员和教师","0":"系统管理员"};
+                        }},
+                    {"value":"提交","type":"submit","defElem":"btn"},
+                ]
+            ]
+            ,toolbarFun: {
+                //加载工具条前值函数，用于指定每一级菜单的操作选项，比如一级菜单不允许删除，二级菜单不允许添加三级菜单
+                loadToolbarBefore: function(buttons, param, $div){
+                    /*console.log(buttons);
+                    console.log(param);
+                    console.log($div);*/
+                    if (!param.leaf) { //如果是根节点（一级菜单不允许删除）
+                        buttons.delToolbar = ""; //取消删除功能
+                    }
+                    if(param.leaf){ // 如果是叶子节点
+                        buttons.addToolbar = "";  // 取消新增功能（二级菜单不可以新增三级菜单）
+                    }
+                    return buttons; // 将按钮对象返回
+                },
+                //添加
+                addTreeNode: function(treeNode, $div){
+                    $.ajax({
+                        type: 'POST',
+                        url: '/menu',
+                        data: {
+                            title:treeNode.context,
+                            parentId:treeNode.parentId,
+                            parentName:treeNode.nodeTitle,
+                            url:treeNode.url,
+                            authority:treeNode.authority
+                        },
+                        success: function(res){
+                            if (res.result){
+                                DTree.changeTreeNodeAdd(true); // 添加成功
+                            } else {
+                                layer.msg(res.message,{icon:5},function (){});
+                                DTree.changeTreeNodeAdd(false); // 添加失败
+                            }
+                        },
+                        error: function(){
+                            DTree.changeTreeNodeAdd(false); // 添加失败
+                        }
+                    });
+                },
+                //更新前发送请求回显数据到弹出框
+                editTreeLoad: function(treeNode){
+                    //layer.alert(JSON.stringify(treeNode));
+                    // 这里可以发送ajax请求，来获取参数值，最后将参数值以form能识别的键值对json的形式返回
+                    $.ajax({
+                        type: "GET",
+                        url: "/menu",
+                        data: {
+                            title:treeNode.context,
+                            parentId:treeNode.parentId
+                        },
+                        success: function(res){
+                            let param = res.data;
+                            //layer.alert(JSON.stringify(param));
+                            // 这里的param格式为：  {level:treeNode.level, test:"3"};
+                            DTree.changeTreeNodeDone(param); // 配套使用
+                    }
+                })
+                },
+                //更新
+                editTreeNode: function(treeNode, $div){
+                    //layer.alert(JSON.stringify(treeNode));
+                    $.ajax({
+                        type: "PUT",
+                        url: "/menu",
+                        data: {
+                            title:treeNode.nodeTitle,
+                            newTitle:treeNode.editNodeName,
+                            parentId:treeNode.parentId,
+                            url:treeNode.url,
+                            authority:treeNode.authority
+                        },
+                        success: function(res){
+                            if (res.result){
+                                DTree.changeTreeNodeEdit(true);// 修改成功
+                            } else{
+                                DTree.changeTreeNodeEdit(false);//修改失败
+                            }
+                        },
+                        error: function(){
+                            DTree.changeTreeNodeEdit(false);//修改失败
+                        }
+                    });
+                },
+                //删除，真删除
+                delTreeNode: function(treeNode, $div){
+                    //layer.alert(JSON.stringify(treeNode));
+                    $.ajax({
+                        type: "DELETE",
+                        url: "/menu",
+                        data: {
+                            title:treeNode.context,
+                            parentId:treeNode.parentId
+                        },
+                        success: function(res){
+                            if (res.result){
+                                DTree.changeTreeNodeDel(true); // 删除成功
+                            } else{
+                                DTree.changeTreeNodeDel(false);// 删除失败
+                            }
+                        },
+                        error: function(){
+                            DTree.changeTreeNodeDel(false);// 删除失败
+                        }
+                    });
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

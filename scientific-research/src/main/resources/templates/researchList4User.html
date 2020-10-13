@@ -78,7 +78,7 @@
         //详见：https://www.layui.com/doc/modules/table.html#totalRow
         table.render({
             elem: '#table'
-            ,url:'/researchs'
+            ,url:'/researches'
             ,toolbar: '#toolbarDemo'
             ,where:{userId:userHid} //使用where传参
             ,title: '科研数据表'
@@ -115,8 +115,10 @@
         });
         //右侧操作栏的对应操作
         table.on('tool(table)',function(obj){
+            //重传
             if(obj.event === 'reupload'){
                 findById(obj.data.researchId);
+            //删除
             } else if(obj.event === 'del'){
                 layer.confirm('真的删除行么', function(index){
                     $.ajax({

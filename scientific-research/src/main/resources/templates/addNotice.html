@@ -70,10 +70,6 @@
         //监听提交
         form.on('submit(demo1)', function(data){
             data.field.content = layedit.getContent(index);
-            //提交前做一些初始化
-            layer.alert(JSON.stringify(data.field), {
-                title: '最终的提交信息'
-            });
             $.ajax({
                 url:'/notice',
                 type:'POST',
